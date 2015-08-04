@@ -125,9 +125,7 @@ public class Main {
         }
 
         if (UPLOAD) {
-          System.out.print("[.] Saving log...");
-          wiki.newSection("User:" + user + "/Muzeum Narodowe Warszawa", "", log, false, true);
-          System.out.print(" OK!\n");
+          saveLog(log);
         }
 
       } catch (NumberFormatException ex) {
@@ -138,6 +136,12 @@ public class Main {
         System.out.println("[!] Not logged in");
       }
     }
+  }
+
+  private static void saveLog(String log) throws LoginException, IOException {
+    System.out.print("[.] Saving log...");
+    wiki.newSection("User:" + user + "/Muzeum Narodowe Warszawa", "", log, false, true);
+    System.out.print(" OK!\n");
   }
 
   private static void getSinglePhoto(String text) {
@@ -167,6 +171,13 @@ public class Main {
       Record record = harvester.getRecord("oai:cyfrowe.mnw.art.pl:" + id);
       Metadata metadata = record.getMetadata();
 
+      Photo photo = new Photo(id);
+      photo.setAccNumber(metadata.getIdentifierList().get(2));
+      photo.setAuthor(metadata.getCreatorList().get(0));
+      photo.setDate(metadata.getDateList().get(0));
+      photo.setTitle(metadata.getTitleList().get(0));
+      
+      /*
       showEntries(metadata.getContributorList(), "ContributorList");
       showEntries(metadata.getCoverageList(), "CoverageList");
       showEntries(metadata.getCreatorList(), "CreatorList");
@@ -182,6 +193,9 @@ public class Main {
       showEntries(metadata.getSubjectList(), "SubjectList");
       showEntries(metadata.getTitleList(), "TitleList");
       showEntries(metadata.getTypeList(), "TypeList");
+      */
+      
+      System.out.println("\n" + photo.getWikiText());
     } catch (Exception ex) {
       Logger.getLogger(Main.class.getName()).log(Level.SEVERE, null, ex);
     }
