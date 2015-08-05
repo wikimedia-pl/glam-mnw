@@ -60,7 +60,7 @@ class Photo {
   // sets
   //
   public void setAccNumber(String _accession_number) {
-    accession_number = _accession_number.startsWith("Nr inwent.: ") ? _accession_number.substring(12) : _accession_number;
+    accession_number = _accession_number;
   }
 
   public void setAuthor(String _author) {
@@ -101,65 +101,50 @@ class Photo {
     path = "http://cyfrowearchiwum.amu.edu.pl" + _path.replace("window.open('", "").replace("','_blank');", "");
   }
 
-  public void setTags(Elements _elems) {
-    for (Element e : _elems) {
-      tags.add(e.text());
-    }
+  public void setTags(ArrayList<String> taglist) {
+    tags = taglist;
   }
 
-  public void setTitle(String _title) {
-    if(!_title.equals("brak")) {
-      title = _title;
+  public void setTitle(ArrayList<String> titles) {
+    title = "";
+    for(String text : titles) {
+      title += "{{pl|" + text + "}}\n";
+    }
+    if(!title.isEmpty()) {
+      title = title.substring(0, title.length()-1);
     }
   }
 
   // gets  
   //
+  public String getAccNumber() {
+    return accession_number;
+  }
+
+  public String getAuthor() {
+    return author;
+  }
+
   public String getCategories() {
     Categories categories = new Categories();
     String text = "";
-
-    String country = "Poland";
-    if(tags.contains("afganistan")) {
-      country = "Afghanistan";
-    } else if(tags.contains("afryka")) {
-      country = "Africa";
-    } else if(tags.contains("azja")) {
-      country = "Asia";
-    } else if(tags.contains("bałkany")) {
-      country = "the Balkans";
-    }
-    
-    for (int i = 0; i < tags.size(); ++i) {
-      tags.set(i, categories.get(tags.get(i)));
-    }
-
-    if (!getCity().isEmpty()) {
-      tags.add(getCity());
-    }
 
     HashSet hs = new HashSet();
     hs.addAll(tags);
     tags.clear();
     tags.addAll(hs);
     Collections.sort(tags);
-    
-    if (getDate().matches("[0-9]{4}.*")) {
-      text += "[[Category:" + getDate().substring(0, 4) + " in " + country + "]]\n";
-    }
 
     for (String tag : tags) {
       if (!tag.trim().isEmpty()) {
-        text += tag.equals(getCity()) ?
-                "[[Category:" + tag + "]]\n" :
-                "[[Category:" + tag + " " + country + "]]\n";
+        text += "[[Category:" + tag + "]]\n";
       }
     }
 
     if (text.isEmpty()) {
       text += "{{subst:unc}}";
     }
-    
+
     return text;
   }
 
@@ -169,24 +154,11 @@ class Photo {
   }
 
   String getDate() {
-    // date month year
-    if (date.matches("[0-9]{1,2} [IVX]{1,5} [0-9]{4}")) {
-      String[] dates = date.split(" ");
-      if (dates[0].length() == 1) {
-        dates[0] = "0" + dates[0];
-      }
-      return dates[2] + "-" + parseMonth(dates[1]) + "-" + dates[0];
-
-    } else if (date.matches("[0-9]{1,2}\\-[0-9]{1,2}\\-[0-9]{4}")) {
-      String[] dates = date.split("-");
-      return dates[2] + "-" + dates[1] + "-" + dates[0];
-
-    }
     return date;
   }
-  
+
   String getTitle() {
-    return title.isEmpty() ? "" : "{{pl|" + title + ".}}";
+    return title.isEmpty() ? "" : title;
   }
 
   File getFile() {
@@ -195,10 +167,10 @@ class Photo {
       URL url = new URL(path);
       BufferedImage bi = ImageIO.read(url);
       f = new File("temp.jpg");
-      if(bi == null) {
+      if (bi == null) {
         return null;
       }
-      
+
       ImageIO.write(bi, "jpg", f);
 
     } catch (MalformedURLException ex) {
@@ -211,50 +183,54 @@ class Photo {
 
   public String getName() {
     String text = "";
-    
-    if(!title.isEmpty()) {
+
+    if (!title.isEmpty()) {
       text += title + " - ";
     }
-    if(!getCity().isEmpty()) {
+    if (!getCity().isEmpty()) {
       text += getCity() + " - ";
     }
     text += accession_number + ".jpg";
-    
+
     return text;
   }
 
   public String getWikiText() {
+    //{{Technique|lithograph|lithographic paper}}
+    //{{Size|cm|height=33|width=18.5}}
+    
     String text = "=={{int:filedesc}}==\n"
-            + "{{Photograph\n"
-            + " |photographer       = {{pl|" + author + "}}\n"
+            + "{{Artwork\n"
+            + " |artist             = " + getAuthor() + "\n"
+            + " |author             = \n"
             + " |title              = " + getTitle() + "\n"
             + " |description        = \n"
-            + " |depicted people    = \n"
-            + " |depicted place     = {{pl|" + location + "}}\n"
             + " |date               = " + getDate() + "\n"
-            + " |medium             = {{technique|photo}}\n"
+            + " |source             = \n"
+            + " |medium             = \n"
             + " |dimensions         = \n"
-            + " |institution        = {{Institution:Institute of Ethnology and Cultural Anthropology, Adam Mickiewicz University}}\n"
-            + " |references         = \n"
+            + " |institution        = {{Institution:National Museum in Warsaw}}\n"
+            + " |department         = \n"
+            + " |place of discovery = \n"
             + " |object history     = \n"
             + " |exhibition history = \n"
             + " |credit line        = \n"
-            + " |inscriptions       = \n"
-            + " |notes              = " + comment + "\n"
-            + " |accession number   = " + accession_number + "\n"
-            + " |source             = http://cyfrowearchiwum.amu.edu.pl/archive/" + id + "\n"
+            + " |notes              = \n"
             + " |permission         = \n"
+            + " |accession number   = " + getAccNumber() + "\n"
+            + " |references         = \n"
             + " |other_versions     = \n"
+            + " |wikidata           = \n"
             + "}}\n\n";
 
     text += "=={{int:license-header}}==\n"
-            + "{{cc-by-sa-3.0-pl}}\n"
-            + "{{Institute of Ethnology and Cultural Anthropology, Adam Mickiewicz University partnership}}\n"
+            + "{{PD-old-auto}}\n"
+            + "{{National Museum in Warsaw partnership}}\n"
             + "{{subst:chc}}\n\n";
 
     text += getCategories();
-    text += "[[Category:Images from Józef Burszta Digital Archives – needing category checks]]\n";
-    
+    text += "[[Category:Images from National Museum in Warsaw – needing category checks]]\n";
+
     text = text.replaceAll(" +", " ");
     return text;
   }
@@ -264,18 +240,42 @@ class Photo {
   String parseMonth(String month) {
     String m = "??";
     switch (month) {
-      case "I": m = "01"; break;
-      case "II": m = "02"; break;
-      case "III": m = "03"; break;
-      case "IV": m = "04"; break;
-      case "V": m = "05"; break;
-      case "VI": m = "06"; break;
-      case "VII":  m = "07"; break;
-      case "VIII":  m = "08"; break;
-      case "IX":  m = "09"; break;
-      case "X":  m = "10"; break;
-      case "XI": m = "11"; break;
-      case "XII": m = "12"; break;
+      case "I":
+        m = "01";
+        break;
+      case "II":
+        m = "02";
+        break;
+      case "III":
+        m = "03";
+        break;
+      case "IV":
+        m = "04";
+        break;
+      case "V":
+        m = "05";
+        break;
+      case "VI":
+        m = "06";
+        break;
+      case "VII":
+        m = "07";
+        break;
+      case "VIII":
+        m = "08";
+        break;
+      case "IX":
+        m = "09";
+        break;
+      case "X":
+        m = "10";
+        break;
+      case "XI":
+        m = "11";
+        break;
+      case "XII":
+        m = "12";
+        break;
     }
     return m;
   }

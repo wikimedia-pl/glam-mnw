@@ -175,7 +175,8 @@ public class Main {
       photo.setAccNumber(metadata.getIdentifierList().get(2));
       photo.setAuthor(metadata.getCreatorList().get(0));
       photo.setDate(metadata.getDateList().get(0));
-      photo.setTitle(metadata.getTitleList().get(0));
+      photo.setTitle(metadata.getTitleList());
+      photo.setTags(metadata.getSubjectList());
       
       /*
       showEntries(metadata.getContributorList(), "ContributorList");
@@ -257,10 +258,10 @@ public class Main {
       }
 
       elems = doc.select(".metadata .Tagi a");
-      photo.setTags(elems);
+      //photo.setTags(elems);
 
       elem = doc.select(".metadata .title").get(0);
-      photo.setTitle(elem.text());
+      //photo.setTitle(elem.text());
 
       // result
       System.out.println("[" + id + "] Parsed as File:" + photo.getName());
