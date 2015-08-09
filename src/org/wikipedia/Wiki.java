@@ -420,6 +420,10 @@ public class Wiki implements Serializable
     // user management
     private HashMap<String, String> cookies = new HashMap<String, String>(12);
     private User user;
+    public String getLoggedInUser() {
+      return user.getUsername();
+    }
+            
     private int statuscounter = 0;
 
     // various caches
