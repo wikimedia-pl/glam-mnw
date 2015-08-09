@@ -26,18 +26,27 @@ package pl.wikimedia.glam.mnw;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.io.StringReader;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.Map;
+import java.util.Scanner;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
-import org.jsoup.nodes.Element;
-import org.jsoup.select.Elements;
+import javax.xml.parsers.DocumentBuilder;
+import javax.xml.parsers.DocumentBuilderFactory;
+import org.w3c.dom.CharacterData;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
+import org.w3c.dom.Node;
+import org.w3c.dom.NodeList;
+import org.xml.sax.InputSource;
 
 class Photo {
 
@@ -48,7 +57,10 @@ class Photo {
   String author = "";
   String comment = "";
   String date = "";
+  String dimensions = "";
   String location = "";
+  String medium = "";
+  String objectType = "";
   String title = "";
 
   ArrayList<String> tags = new ArrayList<>();
@@ -57,76 +69,80 @@ class Photo {
     id = _id;
   }
 
-  // sets
-  //
-  public void setAccNumber(String _accession_number) {
-    accession_number = _accession_number;
+  public void setAccNumber(String accession_number) {
+    this.accession_number = accession_number;
   }
 
-  public void setAuthor(String _author) {
-    author = _author.startsWith("Autor: ") ? _author.substring(7) : _author;
-  }
+  public void setAuthor(ArrayList<String> authors) {
+    Pattern r = Pattern.compile("(.*), (.*) \\(.*");
+    this.author = "";
 
-  public void setComment(String _comment) {
-    if (!_comment.isEmpty()) {
-      comment = "{{pl|" + _comment + "}}";
+    for (String entry : authors) {
+      Matcher m = r.matcher(entry);
+
+      if (m.find()) {
+        this.author += "{{Creator:" + m.group(2) + " " + m.group(1) + "}}\n";
+      } else {
+        this.author += entry + "\n";
+      }
     }
   }
 
-  public void setDate(String _date) {
-    String d;
-
-    if (_date.startsWith("Rok:")) {
-      d = _date.substring(4);
-    } else if (_date.startsWith("Zdjęcie wykonan")) {
-      d = _date.substring(17);
-    } else {
-      d = _date;
-    }
-
-    if (d.endsWith("r.")) {
-      d = d.replace("r.", "");
-    }
-
-    date = d.trim();
-  }
-
-  public void setLocation(String _location) {
-    if (!_location.contains("nieznane")) {
-      location = _location.startsWith("Lokacja:") ? _location.substring(8) : _location;
+  public void setDate(ArrayList<String> dates) {
+    this.date = "";
+    for (String entry : dates) {
+      this.date += entry + "\n";
     }
   }
 
-  public void setPath(String _path) {
-    path = "http://cyfrowearchiwum.amu.edu.pl" + _path.replace("window.open('", "").replace("','_blank');", "");
+  public void setDimensions(ArrayList<String> dimensions) {
+    this.dimensions = "";
+    Pattern r = Pattern.compile("([0-9,\\.]*) x ([0-9,\\.]*)(.*)");
+
+    for (String dimension : dimensions) {
+      Matcher m = r.matcher(dimension);
+      this.dimensions += m.find()
+              ? "{{Size |unit=cm |height=" + m.group(1) + " |width=" + m.group(2) + "}} " + m.group(3) + "\n"
+              : dimension + "\n";
+    }
   }
 
-  public void setTags(ArrayList<String> taglist) {
-    tags = taglist;
+  public void setMedium(ArrayList<String> mediums) {
+    HashMap<String, String> map = new HashMap<>();
+    map.put("olej", "oil");
+    map.put("papier", "paper");
+    map.put("płótno", "canvas");
+
+    if (mediums.size() > 2) {
+      medium = "{{technique";
+      for (int i = 1, max = mediums.size(); i < max; i++) {
+        medium += "|";
+        medium += map.get(mediums.get(i)) == null
+                ? mediums.get(i)
+                : map.get(mediums.get(i));
+      }
+      medium += "}}";
+    }
+  }
+
+  public void setObjectType(ArrayList<String> types) {
+    if (types.size() > 0) {
+      objectType = types.get(0);
+    }
+  }
+
+  public void setTags(ArrayList<String> tags) {
+    this.tags = tags;
   }
 
   public void setTitle(ArrayList<String> titles) {
     title = "";
-    for(String text : titles) {
+    for (String text : titles) {
       title += "{{pl|" + text + "}}\n";
     }
-    if(!title.isEmpty()) {
-      title = title.substring(0, title.length()-1);
-    }
-  }
-
-  // gets  
-  //
-  public String getAccNumber() {
-    return accession_number;
-  }
-
-  public String getAuthor() {
-    return author;
   }
 
   public String getCategories() {
-    Categories categories = new Categories();
     String text = "";
 
     HashSet hs = new HashSet();
@@ -146,19 +162,6 @@ class Photo {
     }
 
     return text;
-  }
-
-  String getCity() {
-    String[] loc = location.split(",");
-    return loc[0];
-  }
-
-  String getDate() {
-    return date;
-  }
-
-  String getTitle() {
-    return title.isEmpty() ? "" : title;
   }
 
   File getFile() {
@@ -181,34 +184,18 @@ class Photo {
     return f;
   }
 
-  public String getName() {
-    String text = "";
-
-    if (!title.isEmpty()) {
-      text += title + " - ";
-    }
-    if (!getCity().isEmpty()) {
-      text += getCity() + " - ";
-    }
-    text += accession_number + ".jpg";
-
-    return text;
-  }
-
   public String getWikiText() {
-    //{{Technique|lithograph|lithographic paper}}
-    //{{Size|cm|height=33|width=18.5}}
-    
     String text = "=={{int:filedesc}}==\n"
             + "{{Artwork\n"
-            + " |artist             = " + getAuthor() + "\n"
+            + " |artist             = " + author
             + " |author             = \n"
-            + " |title              = " + getTitle() + "\n"
+            + " |title              = " + title
+            + " |object type        = " + objectType + "\n"
             + " |description        = \n"
-            + " |date               = " + getDate() + "\n"
+            + " |date               = " + date
             + " |source             = \n"
-            + " |medium             = \n"
-            + " |dimensions         = \n"
+            + " |medium             = " + medium + "\n"
+            + " |dimensions         = " + dimensions
             + " |institution        = {{Institution:National Museum in Warsaw}}\n"
             + " |department         = \n"
             + " |place of discovery = \n"
@@ -217,7 +204,7 @@ class Photo {
             + " |credit line        = \n"
             + " |notes              = \n"
             + " |permission         = \n"
-            + " |accession number   = " + getAccNumber() + "\n"
+            + " |accession number   = " + accession_number + "\n"
             + " |references         = \n"
             + " |other_versions     = \n"
             + " |wikidata           = \n"
@@ -235,71 +222,64 @@ class Photo {
     return text;
   }
 
-  // other
-  //
-  String parseMonth(String month) {
-    String m = "??";
-    switch (month) {
-      case "I":
-        m = "01";
-        break;
-      case "II":
-        m = "02";
-        break;
-      case "III":
-        m = "03";
-        break;
-      case "IV":
-        m = "04";
-        break;
-      case "V":
-        m = "05";
-        break;
-      case "VI":
-        m = "06";
-        break;
-      case "VII":
-        m = "07";
-        break;
-      case "VIII":
-        m = "08";
-        break;
-      case "IX":
-        m = "09";
-        break;
-      case "X":
-        m = "10";
-        break;
-      case "XI":
-        m = "11";
-        break;
-      case "XII":
-        m = "12";
-        break;
+  public ArrayList<File> getFiles() {
+    ArrayList<String> paths = new ArrayList<>();
+    ArrayList<File> files = new ArrayList<>();
+
+    try {
+      String xml = getTextFromUrl("http://cyfrowe.mnw.art.pl/Content/" + id + "/PresentationData.xml");
+      Document doc = loadXMLFromString(xml);
+      NodeList nodes = doc.getElementsByTagName("full-image");
+
+      for (int i = 0, max = nodes.getLength(); i < max; i++) {
+        Element element = (Element) nodes.item(i);
+        paths.add("http://cyfrowe.mnw.art.pl/Content/" + id + "/" + getCharacterDataFromElement(element));
+      }
+
+      for (String path : paths) {
+        try {
+          URL url = new URL(path);
+          BufferedImage bi = ImageIO.read(url);
+          File f = new File(paths.indexOf(path) + ".jpg");
+          
+          if (bi != null) {
+            ImageIO.write(bi, "jpg", f);
+            files.add(f);
+          }
+          
+        } catch (MalformedURLException ex) {
+          return null;
+        } catch (IOException ex) {
+          return null;
+        }
+      }
+
+    } catch (IOException ex) {
+      Logger.getLogger(Photo.class.getName()).log(Level.SEVERE, null, ex);
+    } catch (Exception ex) {
+      Logger.getLogger(Photo.class.getName()).log(Level.SEVERE, null, ex);
     }
-    return m;
-  }
-}
 
-class Categories {
-
-  Map<String, String> map = new HashMap<>();
-
-  public Categories() {
-    map.put("architektura sakralna", "Religious buildings in");
-    map.put("budownictwo", "Buildings in");
-    map.put("dzieci", "Children of");
-    map.put("folklor", "Folklore of");
-    map.put("kobiety", "Women of");
-    map.put("narzędzia rolnicze", "Agricultural tools in");
-    map.put("rękodzieło", "Folk art in");
-    map.put("rolnictwo", "Agriculture in");
-    map.put("strój ludowy", "Folk national costumes of");
-    map.put("sztuka ludowa", "Folk art in");
+    return files;
   }
 
-  public String get(String key) {
-    String value = map.get(key);
-    return value == null ? "" : value;
+  private String getCharacterDataFromElement(Element e) {
+    Node child = e.getFirstChild();
+    if (child instanceof CharacterData) {
+      CharacterData cd = (CharacterData) child;
+      return cd.getData();
+    }
+    return "";
+  }
+
+  private String getTextFromUrl(String url) throws MalformedURLException, IOException {
+    return new Scanner(new URL(url).openStream(), "UTF-8").useDelimiter("\\A").next();
+  }
+
+  private Document loadXMLFromString(String xml) throws Exception {
+    DocumentBuilderFactory factory = DocumentBuilderFactory.newInstance();
+    DocumentBuilder builder = factory.newDocumentBuilder();
+    InputSource is = new InputSource(new StringReader(xml));
+    return builder.parse(is);
   }
 }
