@@ -1,4 +1,4 @@
-## glam-uam
+## glam-mnw
 ![Wiki GLAM](http://i.imgur.com/QSVxZfL.png)
 
 
