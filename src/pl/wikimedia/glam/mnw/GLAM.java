@@ -26,7 +26,9 @@ package pl.wikimedia.glam.mnw;
 import com.rdksys.oai.Harvester;
 import com.rdksys.oai.data.Metadata;
 import com.rdksys.oai.data.Record;
+import java.io.File;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.security.auth.login.LoginException;
@@ -37,8 +39,9 @@ public class GLAM {
   Wiki wiki;
   Harvester harvester;
 
-  public GLAM(Wiki wiki) {
+  public GLAM(Wiki wiki, Log log) {
     this.wiki = wiki;
+    this.log = log;
     
     try {
       harvester = new Harvester("http://cyfrowe.mnw.art.pl/dmuseion/oai-pmh-repository.xml");
@@ -80,7 +83,8 @@ public class GLAM {
     try {
       Record record = harvester.getRecord("oai:cyfrowe.mnw.art.pl:" + id);
       Metadata metadata = record.getMetadata();
-
+      log.log("Data downloaded.\n");
+      
       Photo photo = new Photo(id);
       photo.setAccNumber(metadata.getIdentifierList().get(2));
       photo.setAuthor(metadata.getCreatorList());
@@ -90,13 +94,16 @@ public class GLAM {
       photo.setTags(metadata.getSubjectList());
       photo.setMedium(metadata.getDescriptionList());
       photo.setObjectType(metadata.getTypeList());
-      
-      photo.getFiles();
-       
+
       return photo.getWikiText();
     } catch (Exception ex) {
       Logger.getLogger(GLAM.class.getName()).log(Level.SEVERE, null, ex);
     }
     return "";
+  }
+  
+  public ArrayList<File> getFiles(int id) {
+    Photo photo = new Photo(id);
+    return photo.getFiles();
   }
 }

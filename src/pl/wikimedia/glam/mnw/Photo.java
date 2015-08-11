@@ -126,8 +126,14 @@ class Photo {
   }
 
   public void setObjectType(ArrayList<String> types) {
+    HashMap<String, String> map = new HashMap<>();
+    map.put("obraz", "painting");
+    map.put("rysunek", "drawing");
+
     if (types.size() > 0) {
-      objectType = types.get(0);
+      objectType = map.get(types.get(0)) == null
+              ? types.get(0)
+              : map.get(types.get(0));
     }
   }
 
@@ -241,12 +247,12 @@ class Photo {
           URL url = new URL(path);
           BufferedImage bi = ImageIO.read(url);
           File f = new File(paths.indexOf(path) + ".jpg");
-          
+
           if (bi != null) {
             ImageIO.write(bi, "jpg", f);
             files.add(f);
           }
-          
+
         } catch (MalformedURLException ex) {
           return null;
         } catch (IOException ex) {

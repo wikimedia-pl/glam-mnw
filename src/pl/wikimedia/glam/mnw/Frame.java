@@ -23,6 +23,8 @@
  */
 package pl.wikimedia.glam.mnw;
 
+import java.io.File;
+import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.UIManager;
@@ -32,17 +34,17 @@ public class Frame extends javax.swing.JFrame {
 
   Log log;
   GLAM glam;
-  Wiki wiki = new Wiki("test.wikipedia.org"); 
+  Wiki wiki = new Wiki("test.wikipedia.org");
 
   public Frame() {
     initComponents();
     setLocationRelativeTo(null);
-    
+
     wiki.setUserAgent("WMPL GLAM Upload Tool/1.0 (https://github.com/wikimedia-pl/glam-mnw)");
     wiki.setMarkBot(true);
-    
+
     log = new Log(logField);
-    glam = new GLAM(wiki);
+    glam = new GLAM(wiki, log);
   }
 
   @SuppressWarnings("unchecked")
@@ -82,9 +84,9 @@ public class Frame extends javax.swing.JFrame {
       numberPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
       .addGroup(numberPanelLayout.createSequentialGroup()
         .addContainerGap()
-        .addComponent(numberLabel, javax.swing.GroupLayout.DEFAULT_SIZE, 137, Short.MAX_VALUE)
+        .addComponent(numberLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 111, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(numberField, javax.swing.GroupLayout.PREFERRED_SIZE, 292, javax.swing.GroupLayout.PREFERRED_SIZE)
+        .addComponent(numberField, javax.swing.GroupLayout.DEFAULT_SIZE, 354, Short.MAX_VALUE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
         .addComponent(loadButton)
         .addContainerGap())
@@ -180,12 +182,25 @@ public class Frame extends javax.swing.JFrame {
   }// </editor-fold>//GEN-END:initComponents
 
   private void loadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadButtonActionPerformed
-    int number = Integer.parseInt(numberField.getText());
-    System.out.print(number);
-    
-    log.log("Getting data for #" + number);
-    String wikiText = glam.getPhotoWikiText(number);
-    wikiTextField.setText(wikiText);
+    final int number = Integer.parseInt(numberField.getText());
+
+    Runnable run = new Runnable() {
+      @Override
+      public void run() {
+        uploadButton.setEnabled(false);
+        log.log("Getting data for #" + number + "\n");
+        String wikiText = glam.getPhotoWikiText(number);
+        wikiTextField.setText(wikiText);
+
+        log.log("Getting files...\n");
+        ArrayList<File> photos = glam.getFiles(number);
+        log.log(photos.size() + " files downloaded.\n");
+        log.log("Done\n\n");
+        uploadButton.setEnabled(true);
+      }
+    };
+    Thread t = new Thread(run);
+    t.start();
   }//GEN-LAST:event_loadButtonActionPerformed
 
   public static void main(String args[]) {
