@@ -30,7 +30,11 @@
                   <Component id="logPanel" alignment="1" max="32767" attributes="0"/>
                   <Component id="numberPanel" alignment="1" max="32767" attributes="0"/>
                   <Group type="102" alignment="1" attributes="0">
-                      <EmptySpace min="0" pref="0" max="32767" attributes="0"/>
+                      <EmptySpace min="-2" pref="10" max="-2" attributes="0"/>
+                      <Component id="passwordLabel" min="-2" pref="115" max="-2" attributes="0"/>
+                      <EmptySpace type="unrelated" max="-2" attributes="0"/>
+                      <Component id="passwordField" min="-2" pref="144" max="-2" attributes="0"/>
+                      <EmptySpace max="32767" attributes="0"/>
                       <Component id="uploadButton" min="-2" pref="124" max="-2" attributes="0"/>
                   </Group>
               </Group>
@@ -48,7 +52,11 @@
               <EmptySpace max="-2" attributes="0"/>
               <Component id="logPanel" min="-2" max="-2" attributes="0"/>
               <EmptySpace max="-2" attributes="0"/>
-              <Component id="uploadButton" min="-2" max="-2" attributes="0"/>
+              <Group type="103" groupAlignment="3" attributes="0">
+                  <Component id="uploadButton" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="passwordField" alignment="3" min="-2" max="-2" attributes="0"/>
+                  <Component id="passwordLabel" alignment="3" min="-2" max="-2" attributes="0"/>
+              </Group>
               <EmptySpace max="-2" attributes="0"/>
           </Group>
       </Group>
@@ -160,6 +168,9 @@
       <Properties>
         <Property name="text" type="java.lang.String" value="Upload"/>
       </Properties>
+      <Events>
+        <EventHandler event="actionPerformed" listener="java.awt.event.ActionListener" parameters="java.awt.event.ActionEvent" handler="uploadButtonActionPerformed"/>
+      </Events>
     </Component>
     <Container class="javax.swing.JPanel" name="wikiTextPanel">
       <Properties>
@@ -173,18 +184,22 @@
       <Layout>
         <DimensionLayout dim="0">
           <Group type="103" groupAlignment="0" attributes="0">
-              <Group type="102" alignment="0" attributes="0">
+              <Group type="102" attributes="0">
                   <EmptySpace max="-2" attributes="0"/>
-                  <Component id="wikiTextScrollPane" max="32767" attributes="0"/>
+                  <Group type="103" groupAlignment="0" attributes="0">
+                      <Component id="wikiTextScrollPane" pref="530" max="32767" attributes="0"/>
+                      <Component id="fileNameField" max="32767" attributes="0"/>
+                  </Group>
                   <EmptySpace max="-2" attributes="0"/>
               </Group>
           </Group>
         </DimensionLayout>
         <DimensionLayout dim="1">
           <Group type="103" groupAlignment="0" attributes="0">
-              <Group type="102" alignment="0" attributes="0">
+              <Group type="102" alignment="1" attributes="0">
+                  <Component id="fileNameField" min="-2" max="-2" attributes="0"/>
                   <EmptySpace max="-2" attributes="0"/>
-                  <Component id="wikiTextScrollPane" pref="273" max="32767" attributes="0"/>
+                  <Component id="wikiTextScrollPane" pref="258" max="32767" attributes="0"/>
                   <EmptySpace max="-2" attributes="0"/>
               </Group>
           </Group>
@@ -209,7 +224,19 @@
             </Component>
           </SubComponents>
         </Container>
+        <Component class="javax.swing.JTextField" name="fileNameField">
+        </Component>
       </SubComponents>
     </Container>
+    <Component class="javax.swing.JPasswordField" name="passwordField">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="kopytko2015"/>
+      </Properties>
+    </Component>
+    <Component class="javax.swing.JLabel" name="passwordLabel">
+      <Properties>
+        <Property name="text" type="java.lang.String" value="Bot Password"/>
+      </Properties>
+    </Component>
   </SubComponents>
 </Form>

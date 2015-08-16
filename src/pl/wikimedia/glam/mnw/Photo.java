@@ -81,7 +81,7 @@ class Photo {
       Matcher m = r.matcher(entry);
 
       if (m.find()) {
-        this.author += "{{Creator:" + m.group(2) + " " + m.group(1) + "}}\n";
+        this.author +=  m.group(2) + " " + m.group(1);
       } else {
         this.author += entry + "\n";
       }
@@ -190,10 +190,14 @@ class Photo {
     return f;
   }
 
+  public String getFileName() {
+    return author + " - " + title + " (" + date.trim() + ")";
+  }
+  
   public String getWikiText() {
     String text = "=={{int:filedesc}}==\n"
             + "{{Artwork\n"
-            + " |artist             = " + author
+            + " |artist             = {{Creator:" + author + "}}\n"
             + " |author             = \n"
             + " |title              = " + title
             + " |object type        = " + objectType + "\n"

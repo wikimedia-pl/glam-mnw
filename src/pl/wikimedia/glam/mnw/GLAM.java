@@ -35,16 +35,27 @@ import javax.security.auth.login.LoginException;
 import org.wikipedia.Wiki;
 
 public class GLAM {
+
   Log log;
   Wiki wiki;
-  Harvester harvester;
+  
+  int id;
+  Metadata metadata;
+  Photo photo;
 
-  public GLAM(Wiki wiki, Log log) {
+  public GLAM(Wiki wiki, Log log, int id) {
+    this.id = id;
     this.wiki = wiki;
     this.log = log;
-    
+
     try {
-      harvester = new Harvester("http://cyfrowe.mnw.art.pl/dmuseion/oai-pmh-repository.xml");
+      Harvester harvester = new Harvester("http://cyfrowe.mnw.art.pl/dmuseion/oai-pmh-repository.xml");
+      Record record = harvester.getRecord("oai:cyfrowe.mnw.art.pl:" + id);
+      
+      metadata = record.getMetadata();
+      photo = new Photo(id);
+      log.log("Data downloaded.\n");
+
     } catch (Exception ex) {
       Logger.getLogger(GLAM.class.getName()).log(Level.SEVERE, null, ex);
     }
@@ -52,40 +63,18 @@ public class GLAM {
 
   public void saveLog(String log) {
     try {
-      wiki.newSection("User:" + wiki.getLoggedInUser() + "/Muzeum Narodowe Warszawa", "", log, false, true);
+      wiki.newSection("User:" + wiki.getLoggedInUser() + "/log", "", log, false, true);
     } catch (IOException | LoginException ex) {
       Logger.getLogger(GLAM.class.getName()).log(Level.SEVERE, null, ex);
     }
   }
 
-  public void getSinglePhoto(String text) {
-    int number = Integer.parseInt(text);
-    getPhotoWikiText(number);
-  }
-
-  public void getMultiplePhotos(String text) {
-    String[] range = text.split("-");
-    int min = Integer.parseInt(range[0]);
-    int max = Integer.parseInt(range[1]);
-
-    for (; min < max + 1; ++min) {
-      getPhotoWikiText(min);
-    }
-  }
-
   /**
    * Returns photo description ready for upload
-   *
-   * @param id photo ID
    * @return photo desc in wikicode
    */
-  public String getPhotoWikiText(int id) {
+  public String getPhotoWikiText() {
     try {
-      Record record = harvester.getRecord("oai:cyfrowe.mnw.art.pl:" + id);
-      Metadata metadata = record.getMetadata();
-      log.log("Data downloaded.\n");
-      
-      Photo photo = new Photo(id);
       photo.setAccNumber(metadata.getIdentifierList().get(2));
       photo.setAuthor(metadata.getCreatorList());
       photo.setDate(metadata.getDateList());
@@ -102,8 +91,11 @@ public class GLAM {
     return "";
   }
   
-  public ArrayList<File> getFiles(int id) {
-    Photo photo = new Photo(id);
+  public String getFileName() {
+    return photo.getFileName();
+  }
+
+  public ArrayList<File> getFiles() {
     return photo.getFiles();
   }
 }

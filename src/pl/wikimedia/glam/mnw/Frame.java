@@ -24,9 +24,12 @@
 package pl.wikimedia.glam.mnw;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.security.auth.login.FailedLoginException;
+import javax.security.auth.login.LoginException;
 import javax.swing.UIManager;
 import org.wikipedia.Wiki;
 
@@ -36,15 +39,15 @@ public class Frame extends javax.swing.JFrame {
   GLAM glam;
   Wiki wiki = new Wiki("test.wikipedia.org");
 
+  ArrayList<File> files;
+
   public Frame() {
     initComponents();
     setLocationRelativeTo(null);
 
     wiki.setUserAgent("WMPL GLAM Upload Tool/1.0 (https://github.com/wikimedia-pl/glam-mnw)");
-    wiki.setMarkBot(true);
 
     log = new Log(logField);
-    glam = new GLAM(wiki, log);
   }
 
   @SuppressWarnings("unchecked")
@@ -62,6 +65,9 @@ public class Frame extends javax.swing.JFrame {
     wikiTextPanel = new javax.swing.JPanel();
     wikiTextScrollPane = new javax.swing.JScrollPane();
     wikiTextField = new javax.swing.JTextArea();
+    fileNameField = new javax.swing.JTextField();
+    passwordField = new javax.swing.JPasswordField();
+    passwordLabel = new javax.swing.JLabel();
 
     setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
@@ -124,6 +130,11 @@ public class Frame extends javax.swing.JFrame {
     );
 
     uploadButton.setText("Upload");
+    uploadButton.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        uploadButtonActionPerformed(evt);
+      }
+    });
 
     wikiTextPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
 
@@ -138,16 +149,23 @@ public class Frame extends javax.swing.JFrame {
       wikiTextPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
       .addGroup(wikiTextPanelLayout.createSequentialGroup()
         .addContainerGap()
-        .addComponent(wikiTextScrollPane)
+        .addGroup(wikiTextPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
+          .addComponent(wikiTextScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 530, Short.MAX_VALUE)
+          .addComponent(fileNameField))
         .addContainerGap())
     );
     wikiTextPanelLayout.setVerticalGroup(
       wikiTextPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-      .addGroup(wikiTextPanelLayout.createSequentialGroup()
-        .addContainerGap()
-        .addComponent(wikiTextScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 273, Short.MAX_VALUE)
+      .addGroup(javax.swing.GroupLayout.Alignment.TRAILING, wikiTextPanelLayout.createSequentialGroup()
+        .addComponent(fileNameField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+        .addComponent(wikiTextScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 258, Short.MAX_VALUE)
         .addContainerGap())
     );
+
+    passwordField.setText("kopytko2015");
+
+    passwordLabel.setText("Bot Password");
 
     javax.swing.GroupLayout layout = new javax.swing.GroupLayout(getContentPane());
     getContentPane().setLayout(layout);
@@ -160,7 +178,11 @@ public class Frame extends javax.swing.JFrame {
           .addComponent(logPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
           .addComponent(numberPanel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
           .addGroup(layout.createSequentialGroup()
-            .addGap(0, 0, Short.MAX_VALUE)
+            .addGap(10, 10, 10)
+            .addComponent(passwordLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 115, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.UNRELATED)
+            .addComponent(passwordField, javax.swing.GroupLayout.PREFERRED_SIZE, 144, javax.swing.GroupLayout.PREFERRED_SIZE)
+            .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
             .addComponent(uploadButton, javax.swing.GroupLayout.PREFERRED_SIZE, 124, javax.swing.GroupLayout.PREFERRED_SIZE)))
         .addContainerGap())
     );
@@ -174,7 +196,10 @@ public class Frame extends javax.swing.JFrame {
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
         .addComponent(logPanel, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(uploadButton)
+        .addGroup(layout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+          .addComponent(uploadButton)
+          .addComponent(passwordField, javax.swing.GroupLayout.PREFERRED_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.PREFERRED_SIZE)
+          .addComponent(passwordLabel))
         .addContainerGap())
     );
 
@@ -183,25 +208,43 @@ public class Frame extends javax.swing.JFrame {
 
   private void loadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_loadButtonActionPerformed
     final int number = Integer.parseInt(numberField.getText());
+    glam = new GLAM(wiki, log, number);
 
     Runnable run = new Runnable() {
       @Override
       public void run() {
         uploadButton.setEnabled(false);
+        
         log.log("Getting data for #" + number + "\n");
-        String wikiText = glam.getPhotoWikiText(number);
-        wikiTextField.setText(wikiText);
+        wikiTextField.setText(glam.getPhotoWikiText());
+        fileNameField.setText(glam.getFileName());
 
         log.log("Getting files...\n");
-        ArrayList<File> photos = glam.getFiles(number);
-        log.log(photos.size() + " files downloaded.\n");
+        files = glam.getFiles();
+        log.log(files.size() + " files downloaded.\n");
         log.log("Done\n\n");
+       
         uploadButton.setEnabled(true);
       }
     };
     Thread t = new Thread(run);
     t.start();
   }//GEN-LAST:event_loadButtonActionPerformed
+
+  private void uploadButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_uploadButtonActionPerformed
+    log.log("Log in...\n");
+    try {
+      wiki.login("National Museum Warsaw", passwordField.getPassword());
+
+      for(File file : files) {
+        wiki.upload(file, fileNameField.getText(), wikiTextField.getText(), "");
+      }
+    } catch (IOException | FailedLoginException ex) {
+      log.red("Login failed!\n");
+    } catch (LoginException ex) {
+      log.red("Login failed!\n");
+    }
+  }//GEN-LAST:event_uploadButtonActionPerformed
 
   public static void main(String args[]) {
     //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code ">
@@ -224,6 +267,7 @@ public class Frame extends javax.swing.JFrame {
   }
 
   // Variables declaration - do not modify//GEN-BEGIN:variables
+  private javax.swing.JTextField fileNameField;
   private javax.swing.JButton loadButton;
   private javax.swing.JTextPane logField;
   private javax.swing.JPanel logPanel;
@@ -231,6 +275,8 @@ public class Frame extends javax.swing.JFrame {
   private javax.swing.JTextField numberField;
   private javax.swing.JLabel numberLabel;
   private javax.swing.JPanel numberPanel;
+  private javax.swing.JPasswordField passwordField;
+  private javax.swing.JLabel passwordLabel;
   private javax.swing.JButton uploadButton;
   private javax.swing.JTextArea wikiTextField;
   private javax.swing.JPanel wikiTextPanel;
