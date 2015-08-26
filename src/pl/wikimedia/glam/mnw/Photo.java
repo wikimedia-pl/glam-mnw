@@ -63,6 +63,10 @@ class Photo {
   String objectType = "";
   String title = "";
 
+  String rawAuthor = "";
+  String rawTitle = "";
+  String rawDate = "";
+
   ArrayList<String> tags = new ArrayList<>();
 
   Photo(int _id) {
@@ -80,10 +84,11 @@ class Photo {
     for (String entry : authors) {
       Matcher m = r.matcher(entry);
 
-      if (m.find()) {
-        this.author +=  m.group(2) + " " + m.group(1);
-      } else {
-        this.author += entry + "\n";
+      String text = m.find() ? m.group(2) + " " + m.group(1) : entry;
+      this.author += "{{Creator:" + text + "}}\n";
+
+      if (rawAuthor.isEmpty()) {
+        rawAuthor = text;
       }
     }
   }
@@ -92,6 +97,10 @@ class Photo {
     this.date = "";
     for (String entry : dates) {
       this.date += entry + "\n";
+      
+      if (rawDate.isEmpty()) {
+        rawDate = entry;
+      }
     }
   }
 
@@ -145,6 +154,10 @@ class Photo {
     title = "";
     for (String text : titles) {
       title += "{{pl|" + text + "}}\n";
+
+      if (rawTitle.isEmpty()) {
+        rawTitle = text;
+      }
     }
   }
 
@@ -191,13 +204,13 @@ class Photo {
   }
 
   public String getFileName() {
-    return author + " - " + title + " (" + date.trim() + ")";
+    return rawAuthor + " - " + rawTitle + " - __NUMER__ (" + accession_number.trim() + ").jpg";
   }
-  
+
   public String getWikiText() {
     String text = "=={{int:filedesc}}==\n"
             + "{{Artwork\n"
-            + " |artist             = {{Creator:" + author + "}}\n"
+            + " |artist             = " + author
             + " |author             = \n"
             + " |title              = " + title
             + " |object type        = " + objectType + "\n"
