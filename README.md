@@ -1,6 +1,8 @@
 ## glam-mnw
 ![Wiki GLAM](http://i.imgur.com/QSVxZfL.png)
 
+#### how to use
+Check [instructions on wiki](https://github.com/wikimedia-pl/glam-mnw/wiki) (in Polish).
 
 #### license
 ```
