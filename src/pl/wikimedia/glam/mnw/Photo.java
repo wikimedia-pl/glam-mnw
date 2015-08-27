@@ -216,7 +216,7 @@ class Photo {
             + " |object type        = " + objectType + "\n"
             + " |description        = \n"
             + " |date               = " + date
-            + " |source             = \n"
+            + " |source             = http://cyfrowe.mnw.art.pl/dmuseion/docmetadata?id=" + id + "\n"
             + " |medium             = " + medium + "\n"
             + " |dimensions         = " + dimensions
             + " |institution        = {{Institution:National Museum in Warsaw}}\n"

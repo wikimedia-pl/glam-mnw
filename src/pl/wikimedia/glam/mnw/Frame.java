@@ -23,8 +23,11 @@
  */
 package pl.wikimedia.glam.mnw;
 
+import java.awt.Desktop;
 import java.io.File;
 import java.io.IOException;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.util.ArrayList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
@@ -59,6 +62,7 @@ public class Frame extends javax.swing.JFrame {
     numberLabel = new javax.swing.JLabel();
     numberField = new javax.swing.JTextField();
     loadButton = new javax.swing.JButton();
+    openInBrowserButton = new javax.swing.JButton();
     logPanel = new javax.swing.JPanel();
     logScrollPane = new javax.swing.JScrollPane();
     logField = new javax.swing.JTextPane();
@@ -68,7 +72,6 @@ public class Frame extends javax.swing.JFrame {
     wikiTextField = new javax.swing.JTextArea();
     fileNameField = new javax.swing.JTextField();
     jLabel2 = new javax.swing.JLabel();
-    jLabel3 = new javax.swing.JLabel();
     uploadPanel = new javax.swing.JPanel();
     uploadButton = new javax.swing.JButton();
     passwordLabel = new javax.swing.JLabel();
@@ -78,16 +81,24 @@ public class Frame extends javax.swing.JFrame {
 
     setDefaultCloseOperation(javax.swing.WindowConstants.EXIT_ON_CLOSE);
 
-    numberPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
+    numberPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("1. Enter OAI ID and load data"));
 
     numberLabel.setText("Number");
 
     numberField.setText("4974");
 
+    loadButton.setFont(new java.awt.Font("Tahoma", 1, 11)); // NOI18N
     loadButton.setText("Load");
     loadButton.addActionListener(new java.awt.event.ActionListener() {
       public void actionPerformed(java.awt.event.ActionEvent evt) {
         loadButtonActionPerformed(evt);
+      }
+    });
+
+    openInBrowserButton.setText("Open in browser");
+    openInBrowserButton.addActionListener(new java.awt.event.ActionListener() {
+      public void actionPerformed(java.awt.event.ActionEvent evt) {
+        openInBrowserButtonActionPerformed(evt);
       }
     });
 
@@ -99,9 +110,11 @@ public class Frame extends javax.swing.JFrame {
         .addContainerGap()
         .addComponent(numberLabel, javax.swing.GroupLayout.PREFERRED_SIZE, 111, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(numberField, javax.swing.GroupLayout.DEFAULT_SIZE, 440, Short.MAX_VALUE)
+        .addComponent(numberField, javax.swing.GroupLayout.DEFAULT_SIZE, 192, Short.MAX_VALUE)
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(loadButton)
+        .addComponent(loadButton, javax.swing.GroupLayout.PREFERRED_SIZE, 181, javax.swing.GroupLayout.PREFERRED_SIZE)
+        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
+        .addComponent(openInBrowserButton, javax.swing.GroupLayout.PREFERRED_SIZE, 134, javax.swing.GroupLayout.PREFERRED_SIZE)
         .addContainerGap())
     );
     numberPanelLayout.setVerticalGroup(
@@ -109,8 +122,10 @@ public class Frame extends javax.swing.JFrame {
       .addGroup(numberPanelLayout.createSequentialGroup()
         .addContainerGap()
         .addGroup(numberPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING, false)
-          .addComponent(loadButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-          .addComponent(numberField)
+          .addGroup(numberPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.BASELINE)
+            .addComponent(numberField)
+            .addComponent(loadButton, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
+            .addComponent(openInBrowserButton))
           .addComponent(numberLabel, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         .addContainerGap(javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
     );
@@ -128,7 +143,7 @@ public class Frame extends javax.swing.JFrame {
       .addGroup(logPanelLayout.createSequentialGroup()
         .addContainerGap()
         .addGroup(logPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-          .addComponent(logScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 616, Short.MAX_VALUE)
+          .addComponent(logScrollPane)
           .addComponent(jLabel1, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         .addContainerGap())
     );
@@ -142,7 +157,7 @@ public class Frame extends javax.swing.JFrame {
         .addContainerGap())
     );
 
-    wikiTextPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
+    wikiTextPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("2. Adjust file names and wiki text"));
 
     wikiTextField.setColumns(20);
     wikiTextField.setFont(new java.awt.Font("Consolas", 0, 10)); // NOI18N
@@ -151,8 +166,6 @@ public class Frame extends javax.swing.JFrame {
 
     jLabel2.setText("File Name");
 
-    jLabel3.setText("Wiki Text");
-
     javax.swing.GroupLayout wikiTextPanelLayout = new javax.swing.GroupLayout(wikiTextPanel);
     wikiTextPanel.setLayout(wikiTextPanelLayout);
     wikiTextPanelLayout.setHorizontalGroup(
@@ -160,8 +173,7 @@ public class Frame extends javax.swing.JFrame {
       .addGroup(wikiTextPanelLayout.createSequentialGroup()
         .addContainerGap()
         .addGroup(wikiTextPanelLayout.createParallelGroup(javax.swing.GroupLayout.Alignment.LEADING)
-          .addComponent(jLabel3, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE)
-          .addComponent(wikiTextScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 616, Short.MAX_VALUE)
+          .addComponent(wikiTextScrollPane)
           .addGroup(wikiTextPanelLayout.createSequentialGroup()
             .addComponent(jLabel2, javax.swing.GroupLayout.PREFERRED_SIZE, 111, javax.swing.GroupLayout.PREFERRED_SIZE)
             .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
@@ -176,13 +188,11 @@ public class Frame extends javax.swing.JFrame {
           .addComponent(fileNameField)
           .addComponent(jLabel2, javax.swing.GroupLayout.DEFAULT_SIZE, javax.swing.GroupLayout.DEFAULT_SIZE, Short.MAX_VALUE))
         .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(jLabel3)
-        .addPreferredGap(javax.swing.LayoutStyle.ComponentPlacement.RELATED)
-        .addComponent(wikiTextScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 283, Short.MAX_VALUE)
+        .addComponent(wikiTextScrollPane, javax.swing.GroupLayout.DEFAULT_SIZE, 249, Short.MAX_VALUE)
         .addContainerGap())
     );
 
-    uploadPanel.setBorder(javax.swing.BorderFactory.createTitledBorder(""));
+    uploadPanel.setBorder(javax.swing.BorderFactory.createTitledBorder("3. Upload"));
 
     uploadButton.setText("Upload");
     uploadButton.addActionListener(new java.awt.event.ActionListener() {
@@ -312,6 +322,15 @@ public class Frame extends javax.swing.JFrame {
     t.start();
   }//GEN-LAST:event_uploadButtonActionPerformed
 
+  private void openInBrowserButtonActionPerformed(java.awt.event.ActionEvent evt) {//GEN-FIRST:event_openInBrowserButtonActionPerformed
+    String url = "http://cyfrowe.mnw.art.pl/dmuseion/docmetadata?id=" + numberField.getText();
+    try {
+      Desktop.getDesktop().browse(new URI(url));
+    } catch (IOException | URISyntaxException ex) {
+      log.red("Opening website failed!\n");
+    }
+  }//GEN-LAST:event_openInBrowserButtonActionPerformed
+
   public static void main(String args[]) {
     //<editor-fold defaultstate="collapsed" desc=" Look and feel setting code ">
     try {
@@ -337,7 +356,6 @@ public class Frame extends javax.swing.JFrame {
   private javax.swing.JCheckBox jCheckBox1;
   private javax.swing.JLabel jLabel1;
   private javax.swing.JLabel jLabel2;
-  private javax.swing.JLabel jLabel3;
   private javax.swing.JButton loadButton;
   private javax.swing.JTextPane logField;
   private javax.swing.JPanel logPanel;
@@ -345,6 +363,7 @@ public class Frame extends javax.swing.JFrame {
   private javax.swing.JTextField numberField;
   private javax.swing.JLabel numberLabel;
   private javax.swing.JPanel numberPanel;
+  private javax.swing.JButton openInBrowserButton;
   private javax.swing.JPasswordField passwordField;
   private javax.swing.JLabel passwordLabel;
   private javax.swing.JButton uploadButton;
