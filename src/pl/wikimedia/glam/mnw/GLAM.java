@@ -48,13 +48,15 @@ public class GLAM {
     this.wiki = wiki;
     this.log = log;
 
+    log.log("[#" + id + "] Getting metadata... ");
+    
     try {
       Harvester harvester = new Harvester("http://cyfrowe.mnw.art.pl/dmuseion/oai-pmh-repository.xml");
       Record record = harvester.getRecord("oai:cyfrowe.mnw.art.pl:" + id);
       
       metadata = record.getMetadata();
       photo = new Photo(id);
-      log.log("Data downloaded.\n");
+      log.log("Done!\n");
 
     } catch (Exception ex) {
       Logger.getLogger(GLAM.class.getName()).log(Level.SEVERE, null, ex);
