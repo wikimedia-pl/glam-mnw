@@ -96,8 +96,16 @@ public class GLAM {
   public String getFileName() {
     return photo.getFileName();
   }
-
+  
   public ArrayList<File> getFiles() {
-    return photo.getFiles();
+      try {
+          ArrayList<File> photos = photo.getFiles();
+          if(photos == null) {
+              photos = photo.getFilesAlt();
+          }
+          return photos;
+      } catch (Exception ex) {
+          return null;
+      }
   }
 }

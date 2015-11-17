@@ -41,12 +41,14 @@ import java.util.regex.Pattern;
 import javax.imageio.ImageIO;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.parsers.ParserConfigurationException;
 import org.w3c.dom.CharacterData;
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
 import org.w3c.dom.Node;
 import org.w3c.dom.NodeList;
 import org.xml.sax.InputSource;
+import org.xml.sax.SAXException;
 
 class Photo {
 
@@ -245,42 +247,57 @@ class Photo {
     return text;
   }
 
-  public ArrayList<File> getFiles() {
-    ArrayList<String> paths = new ArrayList<>();
-    ArrayList<File> files = new ArrayList<>();
-
+  public ArrayList<File> getFilesAlt() throws Exception {
+    try {
+      String xml = getTextFromUrl("http://cyfrowe.mnw.art.pl/Content/" + id + "/Galeria/PresentationData.xml");
+      Document doc = loadXMLFromString(xml);
+      NodeList nodes = doc.getElementsByTagName("full-image");
+      return writeFiles(nodes, "Galeria/");
+    } catch (IOException ex) {
+      return null;
+    } catch (ParserConfigurationException | SAXException ex) {
+      return null;
+    }
+  }
+  
+  public ArrayList<File> getFiles() throws Exception {
     try {
       String xml = getTextFromUrl("http://cyfrowe.mnw.art.pl/Content/" + id + "/PresentationData.xml");
       Document doc = loadXMLFromString(xml);
       NodeList nodes = doc.getElementsByTagName("full-image");
-
-      for (int i = 0, max = nodes.getLength(); i < max; i++) {
-        Element element = (Element) nodes.item(i);
-        paths.add("http://cyfrowe.mnw.art.pl/Content/" + id + "/" + getCharacterDataFromElement(element));
-      }
-
-      for (String path : paths) {
-        try {
-          URL url = new URL(path);
-          BufferedImage bi = ImageIO.read(url);
-          File f = new File(paths.indexOf(path) + ".jpg");
-
-          if (bi != null) {
-            ImageIO.write(bi, "jpg", f);
-            files.add(f);
-          }
-
-        } catch (MalformedURLException ex) {
-          return null;
-        } catch (IOException ex) {
-          return null;
-        }
-      }
-
+      return writeFiles(nodes, "");
     } catch (IOException ex) {
-      Logger.getLogger(Photo.class.getName()).log(Level.SEVERE, null, ex);
-    } catch (Exception ex) {
-      Logger.getLogger(Photo.class.getName()).log(Level.SEVERE, null, ex);
+      return null;
+    } catch (ParserConfigurationException | SAXException ex) {
+      return null;
+    }
+  }
+
+  private ArrayList<File> writeFiles(NodeList nodes, String prefix) {
+    ArrayList<String> paths = new ArrayList<>();
+    ArrayList<File> files = new ArrayList<>();
+
+    for (int i = 0, max = nodes.getLength(); i < max; i++) {
+      Element element = (Element) nodes.item(i);
+      paths.add("http://cyfrowe.mnw.art.pl/Content/" + id + "/" + prefix + getCharacterDataFromElement(element));
+    }
+
+    for (String p : paths) {
+      try {
+        URL url = new URL(p);
+        BufferedImage bi = ImageIO.read(url);
+        File f = new File(paths.indexOf(p) + ".jpg");
+
+        if (bi != null) {
+          ImageIO.write(bi, "jpg", f);
+          files.add(f);
+        }
+
+      } catch (MalformedURLException ex) {
+        return null;
+      } catch (IOException ex) {
+        return null;
+      }
     }
 
     return files;
